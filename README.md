@@ -20,6 +20,11 @@ I have tested that it preserves mobs, but..<br>
 $ go install github.com/emilyxfox/untear@latest
 ```
 
+2. Docker
+```bash
+$ docker container run --rm -it -v $PWD:/worlds ghcr.io/emilyxfox/untear
+```
+
 ## Usage
 ```bash
 $ ls
