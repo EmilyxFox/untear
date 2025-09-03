@@ -31,9 +31,10 @@ var verbose bool
 
 // rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{
-	Use:   "untear",
-	Short: "Reassemble your Minecraft world which Paper tore apart",
-	Long:  `Untear lets you rejoin the three Minecraft dimensions into a single world file so it usable with vanilla servers and in singleplayer.`,
+	Use:     "untear [path]",
+	Example: "untear server-files/ --prefix world",
+	Short:   "Reassemble your Minecraft world which Paper tore apart",
+	Long:    `Untear lets you rejoin the three Minecraft dimensions into a single world file so it usable with vanilla servers and in singleplayer.`,
 	// Uncomment the following line if your bare application
 	// has an action associated with it:
 	Run: func(cmd *cobra.Command, args []string) {
