@@ -38,13 +38,16 @@ var rootCmd = &cobra.Command{
 	// Uncomment the following line if your bare application
 	// has an action associated with it:
 	Run: func(cmd *cobra.Command, args []string) {
+		logger := log.NewWithOptions(os.Stdout, log.Options{
+			ReportTimestamp: false,
+		})
 		if verbose {
-			log.SetLevel(log.DebugLevel)
+			logger.SetLevel(log.DebugLevel)
 		}
-		log.Debug("Setting world prefix.", "value", worldPrefix)
+		logger.Debug("Setting world prefix.", "value", worldPrefix)
 
 		if len(args) > 1 {
-			log.Fatal("More than one argument provided. Please provide a (relative) path to a directory containing your torn world folders, or none for current directory.")
+			logger.Fatal("More than one argument provided. Please provide a (relative) path to a directory containing your torn world folders, or none for current directory.")
 		}
 
 		var currentDir string
@@ -52,19 +55,19 @@ var rootCmd = &cobra.Command{
 			var err error
 			currentDir, err = os.Getwd()
 			if err != nil {
-				log.Debug(err)
-				log.Fatal("Could not get current directory.")
+				logger.Debug(err)
+				logger.Fatal("Could not get current directory.")
 			}
 		} else {
 			var err error
 			currentDir, err = util.ResolvePath(args[0])
 			if err != nil {
-				log.Debug(err)
-				log.Fatal("Could not get specified directory: %v", args[0])
+				logger.Debug(err)
+				logger.Fatal("Could not get specified directory: %v", args[0])
 			}
 		}
 
-		log.Info("Searching for world folders.", "path", currentDir, "world_prefix", worldPrefix)
+		logger.Info("Searching for world folders.", "path", currentDir, "world_prefix", worldPrefix)
 
 		worldName := worldPrefix
 		netherName := fmt.Sprintf("%v_nether", worldPrefix)
@@ -74,14 +77,14 @@ var rootCmd = &cobra.Command{
 
 		entries, err := os.ReadDir(currentDir)
 		if err != nil {
-			log.Debug(err)
-			log.Fatal("Could not read files in current directory.")
+			logger.Debug(err)
+			logger.Fatal("Could not read files in current directory.")
 		}
 
 		for _, e := range entries {
-			log.Debug("processing dir entry", "entry", e.Name())
+			logger.Debug("processing dir entry", "entry", e.Name())
 			if !e.IsDir() {
-				log.Debug("entry not a directory, skipping.", "file", e.Name())
+				logger.Debug("entry not a directory, skipping.", "file", e.Name())
 				continue
 			}
 			switch e.Name() {
@@ -95,15 +98,15 @@ var rootCmd = &cobra.Command{
 		}
 
 		if len(discoveredWorlds.world) > 1 || len(discoveredWorlds.nether) > 1 || len(discoveredWorlds.end) > 1 {
-			log.Fatal("Too many world directories found... How did this happen?")
+			logger.Fatal("Too many world directories found... How did this happen?")
 		}
 		switch 0 {
 		case len(discoveredWorlds.world):
-			log.Fatalf("No world directory found. (looking for `%v`)", worldName)
+			logger.Fatalf("No world directory found. (looking for `%v`)", worldName)
 		case len(discoveredWorlds.nether):
-			log.Fatalf("No nether directory found. (looking for `%v`)", netherName)
+			logger.Fatalf("No nether directory found. (looking for `%v`)", netherName)
 		case len(discoveredWorlds.end):
-			log.Fatalf("No the_end directory found. (looking for `%v`)", theEndName)
+			logger.Fatalf("No the_end directory found. (looking for `%v`)", theEndName)
 		}
 
 		paperWorlds := worlds{
@@ -112,7 +115,7 @@ var rootCmd = &cobra.Command{
 			end:    discoveredWorlds.end[0],
 		}
 
-		log.Info("Found world directories.",
+		logger.Info("Found world directories.",
 			"world", filepath.Join(currentDir, paperWorlds.world.Name()),
 			"nether", filepath.Join(currentDir, paperWorlds.nether.Name()),
 			"the_end", filepath.Join(currentDir, paperWorlds.end.Name()),
@@ -120,32 +123,32 @@ var rootCmd = &cobra.Command{
 
 		vanillaWorldDirPath := filepath.Join(currentDir, fmt.Sprintf("vanilla_%v", worldPrefix))
 
-		log.Info("Creating vanilla world directory", "dir", vanillaWorldDirPath)
+		logger.Info("Creating vanilla world directory", "dir", vanillaWorldDirPath)
 		if err = os.Mkdir(vanillaWorldDirPath, os.ModePerm); err != nil {
-			log.Fatalf("failed to create directory 'vanilla_%s': %v", worldPrefix, err)
+			logger.Fatalf("failed to create directory 'vanilla_%s': %v", worldPrefix, err)
 		}
 
-		log.Info("Copying overworld into vanilla world directory...", "from", filepath.Join(currentDir, paperWorlds.world.Name()), "to", vanillaWorldDirPath)
+		logger.Info("Copying overworld into vanilla world directory...", "from", filepath.Join(currentDir, paperWorlds.world.Name()), "to", vanillaWorldDirPath)
 		err = cp.Copy(filepath.Join(currentDir, paperWorlds.world.Name()), vanillaWorldDirPath)
 		if err != nil {
-			log.Fatal("failed to copy paper overworld to vanilla world directory")
+			logger.Fatal("failed to copy paper overworld to vanilla world directory")
 		}
 
-		log.Info("Copying nether into vanilla world directory...", "from", fmt.Sprintf("%v/DIM-1", paperWorlds.nether.Name()), "to", fmt.Sprintf("%v/DIM-1", fmt.Sprintf("vanilla_%v", worldPrefix)))
+		logger.Info("Copying nether into vanilla world directory...", "from", fmt.Sprintf("%v/DIM-1", paperWorlds.nether.Name()), "to", fmt.Sprintf("%v/DIM-1", fmt.Sprintf("vanilla_%v", worldPrefix)))
 		err = cp.Copy(filepath.Join(currentDir, paperWorlds.nether.Name(), "DIM-1"), filepath.Join(vanillaWorldDirPath, "DIM-1"))
 
-		log.Info("Copying the_end into vanilla world directory...", "from", fmt.Sprintf("%v/DIM1", paperWorlds.end.Name()), "to", fmt.Sprintf("%v/DIM1", fmt.Sprintf("vanilla_%v", worldPrefix)))
+		logger.Info("Copying the_end into vanilla world directory...", "from", fmt.Sprintf("%v/DIM1", paperWorlds.end.Name()), "to", fmt.Sprintf("%v/DIM1", fmt.Sprintf("vanilla_%v", worldPrefix)))
 		err = cp.Copy(filepath.Join(currentDir, paperWorlds.end.Name(), "DIM1"), filepath.Join(vanillaWorldDirPath, "DIM1"))
 
-		log.Info("Removing `paper-world` file...", "from", fmt.Sprintf("%v/paper-world.yml", fmt.Sprintf("vanilla_%v", worldPrefix)))
+		logger.Info("Removing `paper-world` file...", "from", fmt.Sprintf("%v/paper-world.yml", fmt.Sprintf("vanilla_%v", worldPrefix)))
 		err = os.Remove(filepath.Join(vanillaWorldDirPath, "paper-world.yml"))
 		if err != nil {
-			log.Warnf("failed to remove paper-world file. %v", err)
+			logger.Warnf("failed to remove paper-world file. %v", err)
 		}
 
-		log.Info("🎉 Success!")
-		log.Info("🟩 Worlds have been merged")
-		log.Warn("⚠️ DO NOT DELETE PAPER WORLDS BEFORE YOU HAVE CHECKED ALL DIMENSIONS IN THE MERGED WORLD!")
+		logger.Info("🎉 Success!")
+		logger.Info("🟩 Worlds have been merged")
+		logger.Warn("⚠️ DO NOT DELETE PAPER WORLDS BEFORE YOU HAVE CHECKED ALL DIMENSIONS IN THE MERGED WORLD!")
 	},
 }
 
