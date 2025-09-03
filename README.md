@@ -24,6 +24,19 @@ $ go install github.com/emilyxfox/untear@latest
 ```bash
 $ docker container run --rm -it -v $PWD:/worlds ghcr.io/emilyxfox/untear
 ```
+<details>
+
+`--rm` removes the conatiner after use.
+
+`-it` enables colour output.
+
+`-v $PWD:/worlds` mounts your current directory into /worlds where untear will look for world directories by default.
+
+Normal args and flags can be put after the image if your worlds have a different prefix for example:
+```bash
+$ docker container run ... .../untear --prefix my-server-world
+```
+</details>
 
 ## Usage
 ```bash
