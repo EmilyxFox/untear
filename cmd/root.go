@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"runtime/debug"
 
 	"github.com/charmbracelet/log"
 	"github.com/emilyxfox/untear/util"
@@ -44,6 +45,9 @@ var rootCmd = &cobra.Command{
 		if verbose {
 			logger.SetLevel(log.DebugLevel)
 		}
+		bi, _ := debug.ReadBuildInfo()
+		logger.Debug("Running untear", "version", bi.Main.Version)
+
 		logger.Debug("Setting world prefix.", "value", worldPrefix)
 
 		if len(args) > 1 {
